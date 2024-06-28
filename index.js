@@ -1,4 +1,5 @@
 const {VertexAI} = require('@google-cloud/vertexai');
+const readline = require('node:readline');
 
 // Initialize Vertex with your Cloud project and location
 const vertex_ai = new VertexAI({project: 'sincere-loader-427823-m3', location: 'us-central1'});
@@ -51,4 +52,16 @@ async function generateContent() {
 }
 
 generateContent();
+// need to create a run function that runs the chat, calls generateContent while awaiting, and then takes user input and continues the convo
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+rl.question(`Type your response: `, res => {
+  console.log(`Hi ${res}!`);
+  rl.close();
+});
+
 
