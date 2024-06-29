@@ -34,34 +34,47 @@ const generativeModel = vertex_ai.preview.getGenerativeModel({
   ],
 });
 
+const initialPrompt = "You are hypebot. Your goal is to get the individuals you chat with hyped about AI."
 
-async function generateContent() {
-  const req = {
-    contents: [
-      {role: 'user', parts: [{text: `You are hypebot. Your goal is to hype up individuals and make them feel great about themselves.`}]}
-    ],
+async function generateContent(requestText = initialPrompt) {
+  const request = {
+    contents: [{role: 'user', parts: [{text: requestText}]}],
   };
 
-  const streamingResp = await generativeModel.generateContentStream(req);
+  const result = await generativeModel.generateContent(request);
+  const response = result.response;
+  const responseText = response["candidates"][0]["content"]["parts"][0]["text"] 
+  console.log("\n" + "Hypebot: " + responseText + "\n");
+};
 
-  for await (const item of streamingResp.stream) {
-    process.stdout.write('stream chunk: ' + JSON.stringify(item) + '\n');
-  }
+async function sendChat(chatInput, callback) {
+  const chat = generativeModel.startChat();
+  const result = await chat.sendMessage(chatInput);
+  const response = result.response;
+  const responseText = response["candidates"][0]["content"]["parts"][0]["text"] 
+  console.log("\n" + "Hypebot: " + responseText + "\n");
+  callback();
+};
 
-  process.stdout.write('aggregated response: ' + JSON.stringify(await streamingResp.response));
-}
+async function beginChatSession() {
+  await generateContent();
+  await respond();
+};
 
-generateContent();
-// need to create a run function that runs the chat, calls generateContent while awaiting, and then takes user input and continues the convo
+async function respond() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+  rl.question(`Respond to Hypebot: `, userResponse => {
+    if (userResponse === "quit") {
+      rl.close();
+    } else {
+      rl.close();
+      sendChat(userResponse, respond);
+    }
+  });
+};
 
-rl.question(`Type your response: `, res => {
-  console.log(`Hi ${res}!`);
-  rl.close();
-});
-
-
+beginChatSession();
